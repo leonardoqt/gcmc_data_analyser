@@ -56,8 +56,12 @@ void cell :: read_file(ifstream &input)
 	// define number of element related array
 	e_l = new string[num_element];
 	neighbor_dis = new double*[num_element];
+	mean_bond_length = new double*[num_element];
 	for(t1=0;t1<num_element;t1++)
+	{
 		neighbor_dis[t1] = new double[num_element];
+		mean_bond_length[t1] = new double[num_element];
+	}
 	// find symbol of each element and assign element number to each atom
 	// !!!!! Should define absolute order for each element in order to 
 	//       make sure everything is correct when rearrangeing atoms in xsf.
@@ -159,4 +163,36 @@ void cell :: find_neighbor(double **dis)
 		}
 	}
 */
+}
+
+void cell :: get_mean_bond_length()
+{
+	int **num_bonds;
+	num_bonds = new int*[num_element];
+	for(int t1=0; t1<num_element; t1++)
+		num_bonds[t1] = new int[num_element];
+	
+	for(int t1=0; t1<num_element; t1++)
+		for(int t2=0; t2<num_element; t2++)
+		{
+			mean_bond_length[t1][t2] = 0;
+			num_bonds[t1][t2] = 0;
+		}
+
+	for(int t1=0; t1<num_atom; t1++)
+		for(int t2=0; t2<num_neighbor[t1]; t2++)
+		{
+			num_bonds[a_l[t1].sym][neighbor_l[t1][t2].sym]++;
+			mean_bond_length[a_l[t1].sym][neighbor_l[t1][t2].sym] += (neighbor_l[t1][t2].pos-a_l[t1].pos).norm();
+		}
+	
+	for(int t1=0; t1<num_element; t1++)
+		for(int t2=0; t2<num_element; t2++)
+		{
+			if (num_bonds[t1][t2] > 0)
+			{
+				mean_bond_length[t1][t2] /= num_bonds[t1][t2];
+				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_length[t1][t2]<<endl;
+			}
+		}
 }

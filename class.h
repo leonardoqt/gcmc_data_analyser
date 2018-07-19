@@ -52,6 +52,7 @@ private:
 	vec lattice[3];
 	double tot_energy;
 	// identifier
+	double **mean_bond_length;	//between different element, can add height constrain
 
 public:
 	// end of work
@@ -61,7 +62,9 @@ public:
 	void find_neighbor(double);		//distance between each two elements, could be matrix if necessary
 	void find_neighbor(double**);	//distance between each two elements, could be matrix if necessary
 	// calculate identifier
-	
+	// ---bond length
+	void get_mean_bond_length();
+	void get_bond_angle_surf(double);
 };
 
 #endif
