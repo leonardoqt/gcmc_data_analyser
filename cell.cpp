@@ -57,10 +57,12 @@ void cell :: read_file(ifstream &input)
 	e_l = new string[num_element];
 	neighbor_dis = new double*[num_element];
 	mean_bond_length = new double*[num_element];
+	mean_coord_num_surf = new double*[num_element];
 	for(t1=0;t1<num_element;t1++)
 	{
 		neighbor_dis[t1] = new double[num_element];
 		mean_bond_length[t1] = new double[num_element];
+		mean_coord_num_surf[t1] = new double[num_element];
 	}
 	// find symbol of each element and assign element number to each atom
 	// !!!!! Should define absolute order for each element in order to 
@@ -192,7 +194,37 @@ void cell :: get_mean_bond_length()
 			if (num_bonds[t1][t2] > 0)
 			{
 				mean_bond_length[t1][t2] /= num_bonds[t1][t2];
-				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_length[t1][t2]<<endl;
+//				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_length[t1][t2]<<endl;
 			}
 		}
+}
+
+void cell :: get_mean_coord_num_surf(double h_surf)
+{
+	int *num_atoms;
+	num_atoms = new int[num_element];
+	for(int t1=0; t1<num_element; t1++)
+	{
+		num_atoms[t1]=0;
+		for(int t2=0; t2<num_element; t2++)
+			mean_coord_num_surf[t1][t2];
+	}
+
+	for(int t1=0; t1<num_atom; t1++)
+	{
+		if (a_l[t1].pos.x[2] > h_surf)
+		{
+			num_atoms[a_l[t1].sym]++;
+			for(int t2=0; t2<num_neighbor[t1]; t2++)
+				mean_coord_num_surf[a_l[t1].sym][neighbor_l[t1][t2].sym]++;
+		}
+	}
+
+	for(int t1=0; t1<num_element; t1++)
+		for(int t2=0; t2<num_element; t2++)
+			if (num_atoms[t1] > 0)
+			{
+				mean_coord_num_surf[t1][t2] /= num_atoms[t1];
+//				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_coord_num_surf[t1][t2]<<endl;
+			}
 }

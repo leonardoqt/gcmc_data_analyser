@@ -53,6 +53,7 @@ private:
 	double tot_energy;
 	// identifier
 	double **mean_bond_length;	//between different element, can add height constrain
+	double **mean_coord_num_surf;
 
 public:
 	// end of work
@@ -64,7 +65,7 @@ public:
 	// calculate identifier
 	// ---bond length
 	void get_mean_bond_length();
-	void get_bond_angle_surf(double);
+	void get_mean_coord_num_surf(double h_surf);
 };
 
 #endif
