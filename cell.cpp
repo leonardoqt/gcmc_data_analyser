@@ -79,6 +79,12 @@ void cell :: read_file(ifstream &input)
 			unique_el = unique_el + ' '+a_l[t1].symbol+' ';
 		}
 	}
+}
+
+void cell :: build_e_l(string * all_el, int num_el)
+{
+	int t1,t2;
+	num_element = num_el;
 	// define number of element related array
 	e_l = new string[num_element];
 	neighbor_dis = new double*[num_element];
@@ -93,23 +99,25 @@ void cell :: read_file(ifstream &input)
 		mean_coord_num_surf[t1] = new double[num_element];
 		mean_bond_vec_norm[t1] = new double[num_element];
 	}
-	// find symbol of each element and assign element number to each atom
-	// !!!!! Should define absolute order for each element in order to 
-	//       make sure everything is correct when rearrangeing atoms in xsf.
-	for(t1=current=0;t1<num_atom;t1++)
+
+	for(t1=0; t1<num_element; t1++)
+		e_l[t1] = all_el[t1];
+	// find element number to each atom
+	for(t1=0;t1<num_atom;t1++)
 	{
-		for(t2=0;t2<current;t2++)
+		for(t2=0;t2<num_element;t2++)
 		{
 			if (e_l[t2] == a_l[t1].symbol)
 				break;
 		}
-		if (t2 < current)
+		if (t2 < num_element)
+		{
 			a_l[t1].sym = t2;
+		}
 		else
 		{
-			e_l[current] = a_l[t1].symbol;
-			a_l[t1].sym = current;
-			current++;
+			cout<<"element "<<a_l[t1].symbol<<" not found"<<endl;
+			exit(0);
 		}
 	}
 /*

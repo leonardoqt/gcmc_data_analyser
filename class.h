@@ -63,6 +63,7 @@ public:
 	void clean();
 	// 
 	void read_file(std::ifstream&);
+	void build_e_l(std::string*, int);
 	void find_neighbor(double);		//distance between each two elements, could be matrix if necessary
 	void find_neighbor(double**);	//distance between each two elements, could be matrix if necessary
 	// calculate identifier
