@@ -9,6 +9,11 @@ void vec :: import(double *a)
 	x[2] = a[2];
 }
 
+void vec :: clean()
+{
+	x[0] = x[1] = x[2] = 0;
+}
+
 vec  vec :: operator+(const vec& B)
 {
 	vec res;

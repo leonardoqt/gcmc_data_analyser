@@ -15,11 +15,12 @@ friend atom;
 friend cell;
 public:
 	void import(double *);
+	void clean();			// reset value to zero
 	vec operator+(const vec&);
 	vec operator-(const vec&);
 	vec operator*(const double&);
 	vec & operator=(const vec&);
-	vec & operator=(double*);
+	vec & operator=(double*);	// can replace import
 	double norm();
 	//debug
 	void print();
@@ -54,6 +55,8 @@ private:
 	// identifier
 	double **mean_bond_length;	//between different element, can add height constrain
 	double **mean_coord_num_surf;
+	double *composition_surf;
+	double **mean_bond_vec_norm;
 
 public:
 	// end of work
@@ -63,9 +66,10 @@ public:
 	void find_neighbor(double);		//distance between each two elements, could be matrix if necessary
 	void find_neighbor(double**);	//distance between each two elements, could be matrix if necessary
 	// calculate identifier
-	// ---bond length
 	void get_mean_bond_length();
 	void get_mean_coord_num_surf(double h_surf);
+	void get_composition_surf(double h_surf);
+	void get_mean_bond_vec_norm(double h_surf);
 };
 
 #endif

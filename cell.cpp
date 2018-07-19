@@ -58,11 +58,14 @@ void cell :: read_file(ifstream &input)
 	neighbor_dis = new double*[num_element];
 	mean_bond_length = new double*[num_element];
 	mean_coord_num_surf = new double*[num_element];
+	composition_surf = new double[num_element];
+	mean_bond_vec_norm = new double*[num_element];
 	for(t1=0;t1<num_element;t1++)
 	{
 		neighbor_dis[t1] = new double[num_element];
 		mean_bond_length[t1] = new double[num_element];
 		mean_coord_num_surf[t1] = new double[num_element];
+		mean_bond_vec_norm[t1] = new double[num_element];
 	}
 	// find symbol of each element and assign element number to each atom
 	// !!!!! Should define absolute order for each element in order to 
@@ -207,7 +210,7 @@ void cell :: get_mean_coord_num_surf(double h_surf)
 	{
 		num_atoms[t1]=0;
 		for(int t2=0; t2<num_element; t2++)
-			mean_coord_num_surf[t1][t2];
+			mean_coord_num_surf[t1][t2]=0;
 	}
 
 	for(int t1=0; t1<num_atom; t1++)
@@ -227,4 +230,75 @@ void cell :: get_mean_coord_num_surf(double h_surf)
 				mean_coord_num_surf[t1][t2] /= num_atoms[t1];
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_coord_num_surf[t1][t2]<<endl;
 			}
+}
+
+void cell :: get_composition_surf(double h_surf)
+{
+	double tot;
+
+	for (int t1=0; t1<num_element; t1++)
+		composition_surf[t1] = 0;
+
+	for (int t1=0; t1<num_atom; t1++)
+		if (a_l[t1].pos.x[2] > h_surf)
+			composition_surf[a_l[t1].sym]++;
+
+	tot = 0;
+	for (int t1=0; t1<num_element; t1++)
+		tot += composition_surf[t1];
+	
+	for (int t1=0; t1<num_element; t1++)
+	{
+		composition_surf[t1] /= tot;
+//		cout<<e_l[t1]<<": "<<composition_surf[t1]<<endl;
+	}
+}
+
+void cell :: get_mean_bond_vec_norm(double h_surf)
+{
+	int **num_bond_vec;
+	vec *tmp;
+	num_bond_vec = new int*[num_element];
+	tmp = new vec[num_element];
+	for(int t1=0; t1<num_element; t1++)
+	{
+		num_bond_vec[t1] = new int[num_element];
+		tmp[t1].clean();
+	}
+	
+	for(int t1=0; t1<num_element; t1++)
+		for(int t2=0; t2<num_element; t2++)
+		{
+			mean_bond_vec_norm[t1][t2] = 0;
+			num_bond_vec[t1][t2] = 0;
+		}
+
+	for(int t1=0; t1<num_atom; t1++)
+		if (a_l[t1].pos.x[2] > h_surf)
+		{
+			for(int t2=0; t2<num_element; t2++)
+			{
+				tmp[t2].clean();
+			}
+			for(int t2=0; t2<num_neighbor[t1]; t2++)
+			{
+				tmp[neighbor_l[t1][t2].sym] = tmp[neighbor_l[t1][t2].sym] + (neighbor_l[t1][t2].pos-a_l[t1].pos);
+			}
+			for(int t2=0; t2<num_element; t2++)
+			{
+				mean_bond_vec_norm[a_l[t1].sym][t2] += tmp[t2].norm();
+				if (tmp[t2].norm() > 0)
+					num_bond_vec[a_l[t1].sym][t2]++;
+			}
+		}
+	
+	for(int t1=0; t1<num_element; t1++)
+		for(int t2=0; t2<num_element; t2++)
+		{
+			if (num_bond_vec[t1][t2] > 0)
+			{
+				mean_bond_vec_norm[t1][t2] /= num_bond_vec[t1][t2];
+//				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_vec_norm[t1][t2]<<endl;
+			}
+		}
 }
