@@ -5,6 +5,32 @@
 
 using namespace std;
 
+void cell :: clean()
+{
+	// num_element related variable
+	for (int t1=0; t1<num_element; t1++)
+	{
+		delete[] mean_bond_length[t1];
+		delete[] mean_coord_num_surf[t1];
+		delete[] mean_bond_vec_norm[t1];
+		delete[] neighbor_dis[t1];
+	}
+	// num_atom related variable
+	for (int t1=0; t1<num_atom; t1++)
+	{
+		delete[] neighbor_l[t1];
+	}
+	delete[] a_l;
+	delete[] e_l;
+	delete[] num_neighbor;
+	delete[] neighbor_l;
+	delete[] neighbor_dis;
+	delete[] mean_bond_length;
+	delete[] mean_coord_num_surf;
+	delete[] composition_surf;
+	delete[] mean_bond_vec_norm;
+}
+
 void cell :: read_file(ifstream &input)
 {
 	string tmp;
@@ -200,6 +226,10 @@ void cell :: get_mean_bond_length()
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_length[t1][t2]<<endl;
 			}
 		}
+
+	for(int t1=0; t1<num_element; t1++)
+		delete[] num_bonds[t1];
+	delete[] num_bonds;
 }
 
 void cell :: get_mean_coord_num_surf(double h_surf)
@@ -230,6 +260,8 @@ void cell :: get_mean_coord_num_surf(double h_surf)
 				mean_coord_num_surf[t1][t2] /= num_atoms[t1];
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_coord_num_surf[t1][t2]<<endl;
 			}
+
+	delete[] num_atoms;
 }
 
 void cell :: get_composition_surf(double h_surf)
@@ -301,4 +333,9 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_vec_norm[t1][t2]<<endl;
 			}
 		}
+
+	for(int t1=0; t1<num_element; t1++)
+		delete[] num_bond_vec[t1];
+	delete[] tmp;
+	delete[] num_bond_vec;
 }
