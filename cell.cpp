@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include "class.h"
 
 using namespace std;
@@ -346,4 +347,24 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 		delete[] num_bond_vec[t1];
 	delete[] tmp;
 	delete[] num_bond_vec;
+}
+
+void cell :: print_all(ofstream & output)
+{
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_length[t1][t2];
+
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_coord_num_surf[t1][t2];
+
+	for (int t1=0; t1<num_element; t1++)
+		output<<setw(9)<<setprecision(5)<<fixed<<composition_surf[t1];
+
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_norm[t1][t2];
+
+	output<<setw(13)<<setprecision(5)<<fixed<<tot_energy<<endl;
 }

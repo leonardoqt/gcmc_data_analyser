@@ -71,6 +71,8 @@ public:
 	void get_mean_coord_num_surf(double h_surf);
 	void get_composition_surf(double h_surf);
 	void get_mean_bond_vec_norm(double h_surf);
+	// print function
+	void print_all(std::ofstream&);
 };
 
 #endif
