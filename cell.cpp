@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <cmath>
 #include <fstream>
 #include <iomanip>
 #include "class.h"
@@ -14,6 +15,7 @@ void cell :: clean()
 		delete[] mean_bond_length[t1];
 		delete[] mean_coord_num_surf[t1];
 		delete[] mean_bond_vec_norm[t1];
+		delete[] mean_bond_vec_z[t1];
 		delete[] neighbor_dis[t1];
 	}
 	// num_atom related variable
@@ -30,6 +32,7 @@ void cell :: clean()
 	delete[] mean_coord_num_surf;
 	delete[] composition_surf;
 	delete[] mean_bond_vec_norm;
+	delete[] mean_bond_vec_z;
 }
 
 void cell :: read_file(ifstream &input)
@@ -93,12 +96,14 @@ void cell :: build_e_l(string * all_el, int num_el)
 	mean_coord_num_surf = new double*[num_element];
 	composition_surf = new double[num_element];
 	mean_bond_vec_norm = new double*[num_element];
+	mean_bond_vec_z = new double*[num_element];
 	for(t1=0;t1<num_element;t1++)
 	{
 		neighbor_dis[t1] = new double[num_element];
 		mean_bond_length[t1] = new double[num_element];
 		mean_coord_num_surf[t1] = new double[num_element];
 		mean_bond_vec_norm[t1] = new double[num_element];
+		mean_bond_vec_z[t1] = new double[num_element];
 	}
 
 	for(t1=0; t1<num_element; t1++)
@@ -312,6 +317,8 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 		{
 			mean_bond_vec_norm[t1][t2] = 0;
 			num_bond_vec[t1][t2] = 0;
+			// also for bond_vec_z
+			mean_bond_vec_z[t1][t2] = 0;
 		}
 
 	for(int t1=0; t1<num_atom; t1++)
@@ -328,6 +335,7 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 			for(int t2=0; t2<num_element; t2++)
 			{
 				mean_bond_vec_norm[a_l[t1].sym][t2] += tmp[t2].norm();
+				mean_bond_vec_z[a_l[t1].sym][t2] += tmp[t2].x[2];
 				if (tmp[t2].norm() > 0)
 					num_bond_vec[a_l[t1].sym][t2]++;
 			}
@@ -339,6 +347,7 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 			if (num_bond_vec[t1][t2] > 0)
 			{
 				mean_bond_vec_norm[t1][t2] /= num_bond_vec[t1][t2];
+				mean_bond_vec_z[t1][t2] /= num_bond_vec[t1][t2];
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_vec_norm[t1][t2]<<endl;
 			}
 		}
@@ -349,22 +358,92 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 	delete[] num_bond_vec;
 }
 
+// !!!!! this function is not transferrable
+void cell :: get_gii(double h_surf, string el1, string el2, double r0, double cc, double n_ox1, double n_ox2)
+{
+	int i_el1=-1, i_el2=-1;
+	int tmp_num, tmp_num_nei;
+	double tmp_vec;
+	int t1,t2;
+	for (t1=0; t1<num_element; t1++)
+	{
+		if (e_l[t1] == el1)
+			i_el1 = t1;
+		if (e_l[t1] == el2)
+			i_el2 = t1;
+	}
+	if (i_el1==-1 or i_el2 ==-1)
+	{
+		cout<<"Error in calculating global instability index, no such element!"<<endl;
+		exit(0);
+	}
+
+	gii = 0;
+	tmp_num = 0;
+	// loop for element 1
+	for (t1=0; t1<num_atom; t1++)
+		if (a_l[t1].sym == i_el1 and a_l[t1].pos.x[2] >= h_surf)
+		{
+			tmp_num_nei = 0;
+			tmp_vec = 0;
+			for (t2=0; t2<num_neighbor[t1]; t2++)
+				if (neighbor_l[t1][t2].sym == i_el2)
+				{
+					tmp_vec += pow( (neighbor_l[t1][t2].pos-a_l[t1].pos).norm()/r0,cc );
+					tmp_num_nei++;
+				}
+			if (tmp_num_nei >0)
+			{
+				gii += (tmp_vec - n_ox1) * (tmp_vec - n_ox1);
+				tmp_num++;
+			}
+		}
+
+	// loop for element 2
+	for (t1=0; t1<num_atom; t1++)
+		if (a_l[t1].sym == i_el2 and a_l[t1].pos.x[2] >= h_surf)
+		{
+			tmp_num_nei = 0;
+			tmp_vec = 0;
+			for (t2=0; t2<num_neighbor[t1]; t2++)
+				if (neighbor_l[t1][t2].sym == i_el1)
+				{
+					tmp_vec += pow( (neighbor_l[t1][t2].pos-a_l[t1].pos).norm()/r0,cc );
+					tmp_num_nei++;
+				}
+			if (tmp_num_nei >0)
+			{
+				gii += (tmp_vec - n_ox2) * (tmp_vec - n_ox2);
+				tmp_num++;
+			}
+		}
+	if (tmp_num >0)
+		gii = sqrt(gii / tmp_num);
+}
+
 void cell :: print_all(ofstream & output)
 {
+	// bond length
 	for (int t1=0; t1<num_element; t1++)
 		for (int t2=0; t2<num_element; t2++)
 			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_length[t1][t2];
-
+	// coordination number
 	for (int t1=0; t1<num_element; t1++)
 		for (int t2=0; t2<num_element; t2++)
 			output<<setw(9)<<setprecision(5)<<fixed<<mean_coord_num_surf[t1][t2];
-
+	// composition
 	for (int t1=0; t1<num_element; t1++)
 		output<<setw(9)<<setprecision(5)<<fixed<<composition_surf[t1];
-
+	// norm of bond vector
 	for (int t1=0; t1<num_element; t1++)
 		for (int t2=0; t2<num_element; t2++)
 			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_norm[t1][t2];
-
+	// bond vector in z direction
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_z[t1][t2];
+	// global instability index
+	output<<setw(9)<<setprecision(5)<<fixed<<gii;
+	// total energy
 	output<<setw(13)<<setprecision(5)<<fixed<<tot_energy<<endl;
 }

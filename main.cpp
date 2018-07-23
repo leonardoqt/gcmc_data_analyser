@@ -34,7 +34,7 @@ int main()
 	}
 	
 	output.open("descriptor.dat");
-	output<<setw(17)<<"file name |"<<setw(9*num_el*num_el)<<"bond length |"<<setw(9*num_el*num_el)<<"coord num |"<<setw(9*num_el)<<"composition |"<<setw(9*num_el*num_el)<<"bond vec norm |"<<setw(13)<<"energy"<<endl;
+	output<<setw(17)<<"file name |"<<setw(9*num_el*num_el)<<"bond length |"<<setw(9*num_el*num_el)<<"coord num |"<<setw(9*num_el)<<"composition |"<<setw(9*num_el*num_el)<<"bond vec norm |"<<setw(9*num_el*num_el)<<"bond vec z |"<<setw(9)<<"gii |"<<setw(13)<<"energy"<<endl;
 
 	output<<setw(17)<<' ';
 	// bond length
@@ -49,6 +49,10 @@ int main()
 	for(int t1=0; t1<num_el; t1++)
 		output<<setw(9)<<el[t1];
 	// bond vec norm
+	for(int t1=0; t1<num_el; t1++)
+		for(int t2=0; t2<num_el; t2++)
+			output<<setw(9)<<el[t1]+"--"+el[t2];
+	// bond vec z
 	for(int t1=0; t1<num_el; t1++)
 		for(int t2=0; t2<num_el; t2++)
 			output<<setw(9)<<el[t1]+"--"+el[t2];
@@ -70,6 +74,8 @@ int main()
 		c1.get_mean_coord_num_surf(h_surf);
 		c1.get_composition_surf(h_surf);
 		c1.get_mean_bond_vec_norm(h_surf);
+		// !!!!! not transferrable
+		c1.get_gii(h_surf, "Ag", "O",1.842,0.37,1,2);
 		output<<setw(17)<<file_name;
 		c1.print_all(output);
 		c1.clean();
