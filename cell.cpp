@@ -17,6 +17,11 @@ void cell :: clean()
 		delete[] mean_bond_vec_norm[t1];
 		delete[] mean_bond_vec_z[t1];
 		delete[] neighbor_dis[t1];
+		// sdd
+		delete[] mean_bond_length_sdd[t1];
+		delete[] mean_coord_num_surf_sdd[t1];
+		delete[] mean_bond_vec_norm_sdd[t1];
+		delete[] mean_bond_vec_z_sdd[t1];
 	}
 	// num_atom related variable
 	for (int t1=0; t1<num_atom; t1++)
@@ -33,6 +38,11 @@ void cell :: clean()
 	delete[] composition_surf;
 	delete[] mean_bond_vec_norm;
 	delete[] mean_bond_vec_z;
+	//sdd
+	delete[] mean_bond_length_sdd;
+	delete[] mean_coord_num_surf_sdd;
+	delete[] mean_bond_vec_norm_sdd;
+	delete[] mean_bond_vec_z_sdd;
 }
 
 void cell :: read_file(ifstream &input)
@@ -97,6 +107,11 @@ void cell :: build_e_l(string * all_el, int num_el)
 	composition_surf = new double[num_element];
 	mean_bond_vec_norm = new double*[num_element];
 	mean_bond_vec_z = new double*[num_element];
+	//sdd
+	mean_bond_length_sdd = new double*[num_element];
+	mean_coord_num_surf_sdd = new double*[num_element];
+	mean_bond_vec_norm_sdd = new double*[num_element];
+	mean_bond_vec_z_sdd = new double*[num_element];
 	for(t1=0;t1<num_element;t1++)
 	{
 		neighbor_dis[t1] = new double[num_element];
@@ -104,6 +119,11 @@ void cell :: build_e_l(string * all_el, int num_el)
 		mean_coord_num_surf[t1] = new double[num_element];
 		mean_bond_vec_norm[t1] = new double[num_element];
 		mean_bond_vec_z[t1] = new double[num_element];
+		//sdd
+		mean_bond_length_sdd[t1] = new double[num_element];
+		mean_coord_num_surf_sdd[t1] = new double[num_element];
+		mean_bond_vec_norm_sdd[t1] = new double[num_element];
+		mean_bond_vec_z_sdd[t1] = new double[num_element];
 	}
 
 	for(t1=0; t1<num_element; t1++)
@@ -221,6 +241,7 @@ void cell :: get_mean_bond_length()
 		for(int t2=0; t2<num_element; t2++)
 		{
 			mean_bond_length[t1][t2] = 0;
+			mean_bond_length_sdd[t1][t2] = 0;
 			num_bonds[t1][t2] = 0;
 		}
 
@@ -229,6 +250,7 @@ void cell :: get_mean_bond_length()
 		{
 			num_bonds[a_l[t1].sym][neighbor_l[t1][t2].sym]++;
 			mean_bond_length[a_l[t1].sym][neighbor_l[t1][t2].sym] += (neighbor_l[t1][t2].pos-a_l[t1].pos).norm();
+			mean_bond_length_sdd[a_l[t1].sym][neighbor_l[t1][t2].sym] += pow((neighbor_l[t1][t2].pos-a_l[t1].pos).norm(),2);
 		}
 	
 	for(int t1=0; t1<num_element; t1++)
@@ -237,6 +259,8 @@ void cell :: get_mean_bond_length()
 			if (num_bonds[t1][t2] > 0)
 			{
 				mean_bond_length[t1][t2] /= num_bonds[t1][t2];
+				mean_bond_length_sdd[t1][t2] /= num_bonds[t1][t2];
+				mean_bond_length_sdd[t1][t2] = sqrt(mean_bond_length_sdd[t1][t2]-pow(mean_bond_length[t1][t2],2));
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_length[t1][t2]<<endl;
 			}
 		}
@@ -248,22 +272,37 @@ void cell :: get_mean_bond_length()
 
 void cell :: get_mean_coord_num_surf(double h_surf)
 {
-	int *num_atoms;
+	int *num_atoms, *num_atoms_nei;
 	num_atoms = new int[num_element];
+	num_atoms_nei = new int[num_element];
 	for(int t1=0; t1<num_element; t1++)
 	{
 		num_atoms[t1]=0;
 		for(int t2=0; t2<num_element; t2++)
+		{
 			mean_coord_num_surf[t1][t2]=0;
+			mean_coord_num_surf_sdd[t1][t2]=0;
+		}
 	}
 
 	for(int t1=0; t1<num_atom; t1++)
 	{
 		if (a_l[t1].pos.x[2] > h_surf)
 		{
+			// initiate num_atoms_nei
+			for (int t2=0; t2<num_element; t2++)
+				num_atoms_nei[t2] = 0;
+			// add number of centra atom
 			num_atoms[a_l[t1].sym]++;
-			for(int t2=0; t2<num_neighbor[t1]; t2++)
-				mean_coord_num_surf[a_l[t1].sym][neighbor_l[t1][t2].sym]++;
+			// count number of neighbors
+			for (int t2=0; t2<num_neighbor[t1]; t2++)
+				num_atoms_nei[neighbor_l[t1][t2].sym]++;
+			// add to mean and sdd
+			for (int t2=0; t2<num_element; t2++)
+			{
+				mean_coord_num_surf[a_l[t1].sym][t2] += num_atoms_nei[t2];
+				mean_coord_num_surf_sdd[a_l[t1].sym][t2] += pow(num_atoms_nei[t2],2);
+			}
 		}
 	}
 
@@ -272,10 +311,13 @@ void cell :: get_mean_coord_num_surf(double h_surf)
 			if (num_atoms[t1] > 0)
 			{
 				mean_coord_num_surf[t1][t2] /= num_atoms[t1];
+				mean_coord_num_surf_sdd[t1][t2] /= num_atoms[t1];
+				mean_coord_num_surf_sdd[t1][t2] = sqrt(mean_coord_num_surf_sdd[t1][t2] - pow(mean_coord_num_surf[t1][t2],2));
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_coord_num_surf[t1][t2]<<endl;
 			}
 
 	delete[] num_atoms;
+	delete[] num_atoms_nei;
 }
 
 void cell :: get_composition_surf(double h_surf)
@@ -316,9 +358,11 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 		for(int t2=0; t2<num_element; t2++)
 		{
 			mean_bond_vec_norm[t1][t2] = 0;
-			num_bond_vec[t1][t2] = 0;
-			// also for bond_vec_z
 			mean_bond_vec_z[t1][t2] = 0;
+			num_bond_vec[t1][t2] = 0;
+			//sdd
+			mean_bond_vec_norm_sdd[t1][t2] = 0;
+			mean_bond_vec_z_sdd[t1][t2] = 0;
 		}
 
 	for(int t1=0; t1<num_atom; t1++)
@@ -336,6 +380,8 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 			{
 				mean_bond_vec_norm[a_l[t1].sym][t2] += tmp[t2].norm();
 				mean_bond_vec_z[a_l[t1].sym][t2] += tmp[t2].x[2];
+				mean_bond_vec_norm_sdd[a_l[t1].sym][t2] += pow(tmp[t2].norm(),2);
+				mean_bond_vec_z_sdd[a_l[t1].sym][t2] += pow(tmp[t2].x[2],2);
 				if (tmp[t2].norm() > 0)
 					num_bond_vec[a_l[t1].sym][t2]++;
 			}
@@ -348,6 +394,10 @@ void cell :: get_mean_bond_vec_norm(double h_surf)
 			{
 				mean_bond_vec_norm[t1][t2] /= num_bond_vec[t1][t2];
 				mean_bond_vec_z[t1][t2] /= num_bond_vec[t1][t2];
+				mean_bond_vec_norm_sdd[t1][t2] /= num_bond_vec[t1][t2];
+				mean_bond_vec_norm_sdd[t1][t2] = sqrt(mean_bond_vec_norm_sdd[t1][t2] - pow(mean_bond_vec_norm[t1][t2],2));
+				mean_bond_vec_z_sdd[t1][t2] /= num_bond_vec[t1][t2];
+				mean_bond_vec_z_sdd[t1][t2] = sqrt(mean_bond_vec_z_sdd[t1][t2] - pow(mean_bond_vec_z[t1][t2],2));
 //				cout<<e_l[t1]<<"--"<<e_l[t2]<<": "<<mean_bond_vec_norm[t1][t2]<<endl;
 			}
 		}
@@ -421,6 +471,71 @@ void cell :: get_gii(double h_surf, string el1, string el2, double r0, double cc
 		gii = sqrt(gii / tmp_num);
 }
 
+// not transferrable in terms of defining chagre
+void cell :: generate_image(int nx, int ny, std::ofstream& output, double *charge, double h_surf)
+{
+	double *dx, *dy, **image;
+	double height;
+	int num_surf;
+	double scale = 1.0;
+	vec tmp;
+	
+	dx = new double[nx];
+	dy = new double[ny];
+	image = new double*[nx];
+	for(int t1=0; t1<nx; t1++)
+		image[t1] = new double[ny];
+
+	for(int t1=0; t1<nx; t1++)
+		for(int t2=0; t2<ny; t2++)
+			image[t1][t2] = 0;
+
+	//define dx, dy array
+	for(int t1=0; t1<nx; t1++)
+		dx[t1] = t1/(double)nx;
+	for(int t1=0; t1<ny; t1++)
+		dy[t1] = t1/(double)ny;
+
+	// find height as average height
+	num_surf = 0;
+	height = 0;
+	for(int t1=0; t1<num_atom; t1++)
+		if (a_l[t1].pos.x[2] > h_surf)
+		{
+			height += a_l[t1].pos.x[2];
+			num_surf++;
+		}
+	height /= num_surf;
+	
+	// get image
+	for(int t1=0; t1<nx; t1++)
+		for(int t2=0; t2<ny; t2++)
+		{
+			tmp = lattice[0]*dx[t1] + lattice[1]*dy[t2];
+			tmp.x[2] = height;
+			for(int t3=0; t3<num_atom; t3++)
+				if(a_l[t3].pos.x[2]>h_surf)
+				{
+					for(int aaa=-1; aaa<2; aaa++)
+						for(int bbb=-1; bbb<2; bbb++)
+						{
+							image[t1][t2] += charge[a_l[t3].sym]*exp(-fabs(charge[a_l[t3].sym]) * (tmp - a_l[t3].pos - lattice[0]*aaa - lattice[1]*bbb).norm());
+						}
+				}
+		}
+	
+	// print out image
+	for(int t1=0; t1<nx; t1++)
+	{
+		output<<setprecision(4)<<fixed<<image[t1][0];
+		for(int t2=1; t2<ny; t2++)
+			output<<','<<setprecision(4)<<fixed<<image[t1][t2];
+		output<<endl;
+	}
+}
+
+//=====================print=========================
+
 void cell :: print_all(ofstream & output)
 {
 	// bond length
@@ -446,4 +561,25 @@ void cell :: print_all(ofstream & output)
 	output<<setw(9)<<setprecision(5)<<fixed<<gii;
 	// total energy
 	output<<setw(13)<<setprecision(5)<<fixed<<tot_energy<<endl;
+}
+
+void cell :: print_all_sdd(ofstream & output)
+{
+	// bond length
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_length_sdd[t1][t2];
+	// coordination number
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_coord_num_surf_sdd[t1][t2];
+	// norm of bond vector
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_norm_sdd[t1][t2];
+	// bond vector in z direction
+	for (int t1=0; t1<num_element; t1++)
+		for (int t2=0; t2<num_element; t2++)
+			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_z_sdd[t1][t2];
+	output<<endl;
 }
