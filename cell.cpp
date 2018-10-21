@@ -471,6 +471,84 @@ void cell :: get_gii(double h_surf, string el1, string el2, double r0, double cc
 		gii = sqrt(gii / tmp_num);
 }
 
+// !!!!! this function is not transferrable
+void cell :: get_bv(double h_surf, string el1, string el2, double r0, double cc)
+{
+	int i_el1=-1, i_el2=-1;
+	int tmp_num, tmp_num_nei;
+	double tmp_vec;
+	int t1,t2;
+	for (t1=0; t1<num_element; t1++)
+	{
+		if (e_l[t1] == el1)
+			i_el1 = t1;
+		if (e_l[t1] == el2)
+			i_el2 = t1;
+	}
+	if (i_el1==-1 or i_el2 ==-1)
+	{
+		cout<<"Error in calculating bv, no such element!"<<endl;
+		exit(0);
+	}
+
+	bv = 0;
+	tmp_num = 0;
+	// loop for element 1
+	for (t1=0; t1<num_atom; t1++)
+		if (a_l[t1].sym == i_el1 and a_l[t1].pos.x[2] >= h_surf)
+		{
+			tmp_num++;
+			for (t2=0; t2<num_atom; t2++)
+				if (a_l[t2].sym == i_el2)
+				{
+					bv += exp((r0-(a_l[t2].pos-a_l[t1].pos).norm())/cc);
+//					bv += pow(r0 / (a_l[t2].pos-a_l[t1].pos).norm(), cc);
+				}
+		}
+	if (tmp_num > 0)
+		bv /= tmp_num;
+}
+
+// !!!!! this function is not transferrable
+void cell :: get_bvv(double h_surf, string el1, string el2, double r0, double cc)
+{
+	int i_el1=-1, i_el2=-1;
+	int tmp_num, tmp_num_nei;
+	vec tmp_vec;
+	int t1,t2;
+	for (t1=0; t1<num_element; t1++)
+	{
+		if (e_l[t1] == el1)
+			i_el1 = t1;
+		if (e_l[t1] == el2)
+			i_el2 = t1;
+	}
+	if (i_el1==-1 or i_el2 ==-1)
+	{
+		cout<<"Error in calculating bv, no such element!"<<endl;
+		exit(0);
+	}
+
+	bvv = 0;
+	tmp_num = 0;
+	// loop for element 1
+	for (t1=0; t1<num_atom; t1++)
+		if (a_l[t1].sym == i_el1 and a_l[t1].pos.x[2] >= h_surf)
+		{
+			tmp_num++;
+			tmp_vec.clean();
+			for (t2=0; t2<num_atom; t2++)
+				if (a_l[t2].sym == i_el2)
+				{
+//					 tmp_vec = tmp_vec + (a_l[t1].pos-a_l[t2].pos)*pow(r0 / (a_l[t2].pos-a_l[t1].pos).norm(), cc);
+					 tmp_vec = tmp_vec + (a_l[t1].pos-a_l[t2].pos)*exp((r0-(a_l[t2].pos-a_l[t1].pos).norm())/cc);
+				}
+			bvv += tmp_vec.norm();
+		}
+	if (tmp_num > 0)
+		bvv /= tmp_num;
+}
+
 // not transferrable in terms of defining chagre
 void cell :: generate_image(int nx, int ny, std::ofstream& output, double *charge, double h_surf)
 {
@@ -559,6 +637,10 @@ void cell :: print_all(ofstream & output)
 			output<<setw(9)<<setprecision(5)<<fixed<<mean_bond_vec_z[t1][t2];
 	// global instability index
 	output<<setw(9)<<setprecision(5)<<fixed<<gii;
+	// global bv
+	output<<setw(9)<<setprecision(5)<<fixed<<bv;
+	// global bvv
+	output<<setw(9)<<setprecision(5)<<fixed<<bvv;
 	// total energy
 	output<<setw(13)<<setprecision(5)<<fixed<<tot_energy<<endl;
 }

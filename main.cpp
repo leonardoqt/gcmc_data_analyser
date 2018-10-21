@@ -36,7 +36,7 @@ int main()
 	
 	output.open("descriptor.dat");
 	sdd.open("sdd.dat");
-	output<<setw(17)<<"file name |"<<setw(9*num_el*num_el)<<"bond length |"<<setw(9*num_el*num_el)<<"coord num |"<<setw(9*num_el)<<"composition |"<<setw(9*num_el*num_el)<<"bond vec norm |"<<setw(9*num_el*num_el)<<"bond vec z |"<<setw(9)<<"gii |"<<setw(13)<<"energy"<<endl;
+	output<<setw(17)<<"file name |"<<setw(9*num_el*num_el)<<"bond length |"<<setw(9*num_el*num_el)<<"coord num |"<<setw(9*num_el)<<"composition |"<<setw(9*num_el*num_el)<<"bond vec norm |"<<setw(9*num_el*num_el)<<"bond vec z |"<<setw(9)<<"gii |"<<setw(9)<<"bv |"<<setw(9)<<"bvv |"<<setw(13)<<"energy"<<endl;
 	sdd<<setw(17)<<"file name |"<<setw(9*num_el*num_el)<<"bond length |"<<setw(9*num_el*num_el)<<"coord num |"<<setw(9*num_el*num_el)<<"bond vec norm |"<<setw(9*num_el*num_el)<<"bond vec z"<<endl;
 
 	output<<setw(17)<<' ';
@@ -84,7 +84,7 @@ int main()
 			exit(0);
 		}
 		input.open(file_name);
-		image.open(file_name+".csv");
+//		image.open(file_name+".csv");
 		c1.read_file(input);
 		c1.build_e_l(el,num_el);
 		c1.find_neighbor(max_bond_length);
@@ -94,14 +94,16 @@ int main()
 		c1.get_mean_bond_vec_norm(h_surf);
 		// !!!!! not transferrable
 		c1.get_gii(h_surf, "Ag", "O",1.842,0.37,1,2);
+		c1.get_bv(h_surf, "Ag", "O",1.842,0.37);
+		c1.get_bvv(h_surf, "Ag", "O",1.842,0.37);
 		output<<setw(17)<<file_name;
 		sdd<<setw(17)<<file_name;
 		c1.print_all(output);
 		c1.print_all_sdd(sdd);
-		c1.generate_image(40,40,image,charge,h_surf);
+//		c1.generate_image(40,40,image,charge,h_surf);
 		c1.clean();
 		input.close();
-		image.close();
+//		image.close();
 	}
 
 	output.close();

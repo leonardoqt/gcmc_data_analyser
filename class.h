@@ -59,6 +59,8 @@ private:
 	double **mean_bond_vec_norm;
 	double **mean_bond_vec_z;
 	double gii;					// global instability index, note that this is not transferrable when changeing the system
+	double bv;
+	double bvv;
 	// sdd of identifer
 	double **mean_bond_length_sdd;
 	double **mean_coord_num_surf_sdd;
@@ -78,6 +80,8 @@ public:
 	void get_composition_surf(double h_surf);
 	void get_mean_bond_vec_norm(double h_surf);	// bond vec z included
 	void get_gii(double h_surf, std::string el1, std::string el2, double r0, double cc, double n_ox1, double n_ox2);
+	void get_bv(double h_surf, std::string el1, std::string el2, double r0, double cc);
+	void get_bvv(double h_surf, std::string el1, std::string el2, double r0, double cc);
 	// image
 	void generate_image(int nx, int ny, std::ofstream&, double *charge, double h_surf);
 	// print function
